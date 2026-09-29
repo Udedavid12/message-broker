@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: message_broker_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: message_broker
+    ports:
+      - "5433:5432"          # 5433 on the host, 5432 inside the container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
