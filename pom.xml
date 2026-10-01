@@ -25,6 +25,12 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
+		<!-- Jackson (JSON serialization - provides ObjectMapper) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jackson</artifactId>
+		</dependency>
+
 		<!-- JPA + Persistence (provides jakarta.persistence.*) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
