@@ -1,0 +1,2 @@
+ALTER TABLE messages
+    ADD COLUMN max_retries INT NOT NULL DEFAULT 3;

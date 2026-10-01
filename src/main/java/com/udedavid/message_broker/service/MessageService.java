@@ -50,10 +50,24 @@ public class MessageService {
         return messageRepository.save(message);
     }
 
-    public List<Message> listMessages(String topicName) {
+    public List<Message> listMessages(String topicName, String status) {
         Topic topic = topicRepository.findByName(topicName)
             .orElseThrow(() -> new TopicNotFoundException(topicName));
-        return messageRepository.findByTopicIdOrderByCreatedAtAsc(topic.getId());
+
+        if (status == null || status.isBlank()) {
+            return messageRepository.findByTopicIdOrderByCreatedAtAsc(topic.getId());
+        }
+
+        Message.MessageStatus messageStatus;
+        try {
+            messageStatus = Message.MessageStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidStatusException(status);
+        }
+
+        return messageRepository.findByTopicIdAndStatusOrderByCreatedAtAsc(
+            topic.getId(), messageStatus
+        );
     }
 
     @Transactional
@@ -75,8 +89,14 @@ public class MessageService {
             .orElseThrow(() -> new DeliveryNotFoundException(deliveryToken));
 
         Message message = delivery.getMessage();
-        message.setStatus(Message.MessageStatus.PENDING);
         message.incrementRetryCount();
+
+        if (message.getRetryCount() >= message.getMaxRetries()) {
+            message.setStatus(Message.MessageStatus.DLQ);
+        } else {
+            message.setStatus(Message.MessageStatus.PENDING);
+        }
+
         messageRepository.save(message);
         deliveryRepository.delete(delivery);
 
@@ -98,6 +118,12 @@ public class MessageService {
     public static class DeliveryNotFoundException extends RuntimeException {
         public DeliveryNotFoundException(UUID token) {
             super("Delivery not found: " + token);
+        }
+    }
+
+    public static class InvalidStatusException extends RuntimeException {
+        public InvalidStatusException(String status) {
+            super("Invalid status: " + status);
         }
     }
 }
